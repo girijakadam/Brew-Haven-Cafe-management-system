@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Executive Portal | Brew Haven Cafe</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, .brand { font-family: 'Playfair Display', serif; }
+        .admin-nav-tabs {
+            display: flex;
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .admin-tab-btn {
+            background: var(--bg-surface);
+            border: 1.5px solid var(--border-color);
+            padding: 0.6rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .admin-tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        .ai-insight-box {
+            background: linear-gradient(135deg, #f3e5f5, #ede7f6);
+            border: 1.5px solid #d1c4e9;
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="brand">
+            <span class="brand-icon">☕</span>
+            <span>Brew Haven Admin</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="admin.html" class="active">Admin Portal</a></li>
+            <li><a href="staff.html">Kitchen Ops</a></li>
+            <li><a href="index.html">Cafe Menu</a></li>
+        </ul>
+        <div id="navAuth"></div>
+    </nav>
+
+    <!-- Pre-auth loading placeholder -->
+    <div id="authLoading" style="text-align:center; padding:6rem 2rem;">
+        <div style="font-size:3rem; margin-bottom:1rem;">☕</div>
+        <h2>Verifying Administrator Privileges...</h2>
+        <p style="color:var(--text-muted); margin-top:0.5rem;">Ensuring secure cryptographic authorization before presenting executive data.</p>
+    </div>
+
+    <!-- Protected Content Wrapper -->
+    <div id="protectedContent" style="display:none;">
+    <div class="container">
+        <!-- Title Banner -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:2rem;">
+            <div>
+                <h2>Cafe Executive Control Center</h2>
+                <p style="color:var(--text-muted);">Real-time revenue monitoring, AI business diagnostics, menu curation, and sales reporting.</p>
+            </div>
+            <button class="btn-primary" onclick="loadAdminData()">🔄 Refresh Dashboard</button>
+        </div>
+
+        <!-- KPI Cards Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Total Revenue</div>
+                <div class="kpi-value" id="kpiTotalRevenue">₹0.00</div>
+                <small style="color:var(--success);">Lifetime cafe gross</small>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Today's Revenue</div>
+                <div class="kpi-value" id="kpiTodayRevenue" style="color:var(--success);">₹0.00</div>
+                <small style="color:var(--text-muted);">Since 12:00 AM</small>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Total Orders</div>
+                <div class="kpi-value" id="kpiTotalOrders">0</div>
+                <small style="color:var(--text-muted);">Cumulative volume</small>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Active Kitchen Orders</div>
+                <div class="kpi-value" id="kpiActiveOrders" style="color:#e65100;">0</div>
+                <small style="color:var(--text-muted);">Preparing or ready</small>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Guest Satisfaction</div>
+                <div class="kpi-value" id="kpiAvgRating" style="color:#f57f17;">0.0 ★</div>
+                <small style="color:var(--text-muted);"><span id="kpiTotalReviews">0</span> customer reviews</small>
+            </div>
+        </div>
+
+        <!-- AI Executive Sales Insights Box -->
+        <div class="ai-insight-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; flex-wrap:wrap; gap:0.5rem;">
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="font-size:1.8rem;">🧠🤖</span>
+                    <div>
+                        <h3 style="margin:0; color:#4a148c; font-size:1.25rem;">Brew Haven AI Executive Intelligence</h3>
+                        <small style="color:#6a1b9a;">Automated sales diagnostics, menu velocity analysis & prep forecasting</small>
+                    </div>
+                </div>
+                <button class="btn-primary" style="background:#4a148c; color:#fff;" onclick="generateAIInsights()">⚡ Generate Fresh Insights</button>
+            </div>
+            <div id="aiInsightsContent" style="font-size:0.95rem; line-height:1.6; color:#2e1f2f;">
+                Click "Generate Fresh Insights" to run automated AI consulting on your cafe's sales performance, customer ordering patterns, and inventory forecasts.
+            </div>
+        </div>
+
+        <!-- Admin Sub-Navigation Tabs -->
+        <div class="admin-nav-tabs">
+            <button class="admin-tab-btn active" id="btnTabOrders" onclick="switchAdminTab('orders')">📋 Orders Log</button>
+            <button class="admin-tab-btn" id="btnTabTopSelling" onclick="switchAdminTab('topSelling')">🏆 Top Selling Items</button>
+            <button class="admin-tab-btn" id="btnTabMenu" onclick="switchAdminTab('menu')">☕ Menu Catalog Management</button>
+            <button class="admin-tab-btn" id="btnTabUsers" onclick="switchAdminTab('users')">👥 Staff & Users</button>
+        </div>
+
+        <!-- Tab 1: Orders Log -->
+        <section id="sectionOrders">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order No</th>
+                            <th>Customer</th>
+                            <th>Time</th>
+                            <th>Timing & Mode</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr><td colspan="8" style="text-align:center;">Loading orders log...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tab 2: Top Selling Items -->
+        <section id="sectionTopSelling" style="display:none;">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Total Quantity Sold</th>
+                            <th>Total Revenue Generated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topSellingTableBody">
+                        <tr><td colspan="3" style="text-align:center;">Loading top sellers...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tab 3: Menu Management -->
+        <section id="sectionMenu" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.6rem;">
+                <div>
+                    <h3 style="margin:0;">Multi-Cuisine Delights Catalog</h3>
+                    <small style="color:var(--text-muted);">Manage categories, dishes, prices, vegetarian flags, and real-time availability.</small>
+                </div>
+                <div style="display:flex; gap:0.6rem;">
+                    <button class="btn-outline" onclick="openCategoryModal()">📁 Manage Categories</button>
+                    <button class="btn-primary" onclick="openAddMenuItemModal()">+ Add New Menu Item</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Category</th>
+                            <th>Diet</th>
+                            <th>Price</th>
+                            <th>Prep Time</th>
+                            <th>Availability</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminMenuTableBody">
+                        <tr><td colspan="7" style="text-align:center;">Loading menu items...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tab 4: Users Directory -->
+        <section id="sectionUsers" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; flex-wrap:wrap; gap:0.5rem;">
+                <div>
+                    <h3>Staff & Customer Directory</h3>
+                    <p style="color:var(--text-muted); font-size:0.88rem;">Manage roles, create kitchen staff and admin accounts.</p>
+                </div>
+                <button class="btn-primary" onclick="openCreateUserModal()">➕ Add Staff / User</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Current Role</th>
+                            <th>Change Role</th>
+                            <th>Joined On</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="8" style="text-align:center;">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Create Staff / User Modal -->
+    <div class="modal-overlay" id="createUserModal">
+        <div class="modal-content" style="max-width:480px;">
+            <div class="modal-header">
+                <h2>Create Staff / System Account</h2>
+                <button class="btn-close" onclick="closeModal('createUserModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="newUserName" placeholder="e.g. Ramesh Kumar" />
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="newUserEmail" placeholder="e.g. ramesh@brewhaven.com" />
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" id="newUserPhone" placeholder="e.g. 9876543210" />
+                </div>
+                <div class="form-group">
+                    <label>Temporary Password</label>
+                    <input type="password" id="newUserPassword" placeholder="Minimum 6 characters" autocomplete="new-password" />
+                </div>
+                <div class="form-group">
+                    <label>Assigned Role</label>
+                    <select id="newUserRole">
+                        <option value="ROLE_STAFF">STAFF (Barista / Kitchen Ops)</option>
+                        <option value="ROLE_ADMIN">ADMIN (Executive Manager)</option>
+                        <option value="ROLE_CUSTOMER">CUSTOMER</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeModal('createUserModal')">Cancel</button>
+                <button class="btn-primary" onclick="handleCreateUserSubmit()">Create Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Menu Item Modal -->
+    <div class="modal-overlay" id="menuItemModal">
+        <div class="modal-content" style="max-width:520px;">
+            <div class="modal-header">
+                <h2 id="menuModalTitle">Add Menu Item</h2>
+                <button class="btn-close" onclick="closeModal('menuItemModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="menuItemId" />
+                <div class="form-group">
+                    <label>Item Name</label>
+                    <input type="text" id="menuName" placeholder="e.g. Hazelnut Frappe" required />
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="menuCategoryId"></select>
+                </div>
+                <div class="form-group">
+                    <label>Price (₹)</label>
+                    <input type="number" step="0.01" id="menuPrice" placeholder="e.g. 190.00" required />
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="menuDesc" rows="3" placeholder="Appetizing description..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="url" id="menuImg" placeholder="https://..." />
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+                    <div class="form-group">
+                        <label>Preparation Time (mins)</label>
+                        <input type="number" id="menuPrepTime" value="8" />
+                    </div>
+                    <div class="form-group">
+                        <label>Spiciness Level</label>
+                        <select id="menuSpicy">
+                            <option value="Mild">Mild</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hot">Hot</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" style="display:flex; gap:1.5rem; margin-top:0.5rem;">
+                    <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                        <input type="checkbox" id="menuIsVeg" checked /> Pure Vegetarian
+                    </label>
+                    <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                        <input type="checkbox" id="menuIsAvail" checked /> Available for Orders
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeModal('menuItemModal')">Cancel</button>
+                <button class="btn-primary" onclick="saveMenuItem()">Save Item</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Management Modal -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal-content" style="max-width:540px;">
+            <div class="modal-header">
+                <h2>📁 Category Management</h2>
+                <button class="btn-close" onclick="closeModal('categoryModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <h4 style="margin-bottom:0.8rem; color:var(--primary-dark);">Add / Edit Category</h4>
+                <input type="hidden" id="catId" />
+                <div class="form-group">
+                    <label>Category Name</label>
+                    <input type="text" id="catName" placeholder="e.g. Mocktails & Coolers" />
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" id="catDesc" placeholder="Brief appetizing category overview" />
+                </div>
+                <div class="form-group">
+                    <label>Banner Image URL</label>
+                    <input type="url" id="catImg" placeholder="https://..." />
+                </div>
+                <div class="form-group">
+                    <label>Display Order (Priority)</label>
+                    <input type="number" id="catOrder" value="1" />
+                </div>
+                <button class="btn-primary" style="width:100%; justify-content:center; margin-bottom:1.5rem;" onclick="saveCategory()">Save Category</button>
+
+                <h4 style="margin-bottom:0.6rem; color:var(--primary-dark);">Existing Menu Categories</h4>
+                <div id="categoryManagerList" style="max-height:220px; overflow-y:auto; border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:0.6rem;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeModal('categoryModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Reset Password Modal -->
+    <div class="modal-overlay" id="adminResetPasswordModal">
+        <div class="modal-content" style="max-width:440px;">
+            <div class="modal-header">
+                <h2>🔑 Reset User Password</h2>
+                <button class="btn-close" onclick="closeModal('adminResetPasswordModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="resetUserId" />
+                <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">
+                    Set a new temporary password for <strong id="resetUserName">User</strong> (<span id="resetUserRole" class="badge">ROLE</span>). The user will be required to change this password immediately upon their next login.
+                </p>
+                <div class="form-group">
+                    <label for="resetNewPassword">New Temporary Password *</label>
+                    <input type="password" id="resetNewPassword" placeholder="Minimum 6 characters" autocomplete="new-password" />
+                </div>
+                <div class="form-group">
+                    <label for="resetConfirmPassword">Confirm Temporary Password *</label>
+                    <input type="password" id="resetConfirmPassword" placeholder="Re-enter temporary password" autocomplete="new-password" />
+                </div>
+                <div id="resetSuccessAlert" style="display:none; background:#e8f5e9; border:1px solid #c8e6c9; color:#1b5e20; padding:0.75rem; border-radius:var(--radius-sm); margin-top:0.8rem; font-size:0.88rem;">
+                    ✅ Password has been reset successfully! Temporary credentials are now active.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="closeModal('adminResetPasswordModal')">Cancel</button>
+                <button class="btn-primary" id="btnSubmitReset" onclick="handleAdminResetPasswordSubmit()">Reset Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Auth Modal -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-content" style="max-width:440px;">
+            <div class="modal-header">
+                <h2>Admin Authentication</h2>
+                <button class="btn-close" onclick="closeModal('authModal')">✕</button>
+            </div>
+            <div class="modal-body" id="authModalBody"></div>
+        </div>
+    </div>
+    </div> <!-- End Protected Content -->
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="js/app.js"></script>
+    <script>
+        function switchAdminTab(tab) {
+            document.getElementById('btnTabOrders').classList.toggle('active', tab === 'orders');
+            document.getElementById('btnTabTopSelling').classList.toggle('active', tab === 'topSelling');
+            document.getElementById('btnTabMenu').classList.toggle('active', tab === 'menu');
+            document.getElementById('btnTabUsers').classList.toggle('active', tab === 'users');
+
+            document.getElementById('sectionOrders').style.display = tab === 'orders' ? 'block' : 'none';
+            document.getElementById('sectionTopSelling').style.display = tab === 'topSelling' ? 'block' : 'none';
+            document.getElementById('sectionMenu').style.display = tab === 'menu' ? 'block' : 'none';
+            document.getElementById('sectionUsers').style.display = tab === 'users' ? 'block' : 'none';
+        }
+
+        async function loadAdminData() {
+            if (!state.token) {
+                openLoginModal();
+                return;
+            }
+            loadKPIStats();
+            loadAllOrders();
+            loadAdminMenu();
+            loadUsers();
+        }
+
+        async function loadKPIStats() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/stats`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    const s = await res.json();
+                    document.getElementById('kpiTotalRevenue').innerText = `₹${(s.totalRevenue || 0).toFixed(2)}`;
+                    document.getElementById('kpiTodayRevenue').innerText = `₹${(s.todayRevenue || 0).toFixed(2)}`;
+                    document.getElementById('kpiTotalOrders').innerText = s.totalOrders || 0;
+                    document.getElementById('kpiActiveOrders').innerText = s.activeOrders || 0;
+                    document.getElementById('kpiAvgRating').innerText = `${(s.averageRating || 0).toFixed(1)} ★`;
+                    document.getElementById('kpiTotalReviews').innerText = s.totalReviews || 0;
+
+                    // Top sellers
+                    const tbody = document.getElementById('topSellingTableBody');
+                    if (tbody && s.topSellingItems) {
+                        if (s.topSellingItems.length === 0) {
+                            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">No completed sales yet.</td></tr>`;
+                        } else {
+                            tbody.innerHTML = s.topSellingItems.map(item => `
+                                <tr>
+                                    <td><strong>${item.itemName}</strong></td>
+                                    <td>${item.totalQuantity} units</td>
+                                    <td><strong>₹${(item.totalSales || 0).toFixed(2)}</strong></td>
+                                </tr>
+                            `).join('');
+                        }
+                    }
+                } else if (res.status === 403 || res.status === 401) {
+                    showToast('Admin privileges required to access this dashboard', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function generateAIInsights() {
+            const container = document.getElementById('aiInsightsContent');
+            container.innerHTML = '<em>Consulting AI Barista brain and analyzing order metrics...</em>';
+            try {
+                const res = await fetch(`${API_BASE}/ai/insights`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    container.innerHTML = `
+                        <div style="background:#fff; padding:1.25rem; border-radius:8px; border:1px solid #d1c4e9;">
+                            ${data.reply.replace(/\n/g, '<br/>')}
+                            <div style="font-size:0.75rem; color:#888; margin-top:0.8rem; text-align:right;">
+                                Generated by: ${data.modelUsed}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<span style="color:#d32f2f;">Failed to generate AI insights. Please ensure Admin privileges.</span>';
+                }
+            } catch (e) {
+                container.innerHTML = `<span style="color:#d32f2f;">Error: ${e.message}</span>`;
+            }
+        }
+
+        async function loadAllOrders() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/orders`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    const orders = await res.json();
+                    const tbody = document.getElementById('ordersTableBody');
+                    if (orders.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No orders recorded yet.</td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = orders.map(o => `
+                        <tr>
+                            <td><strong>${o.orderNumber}</strong></td>
+                            <td>${o.customerName || 'Guest'}<br/><small style="color:var(--text-muted);">${o.customerPhone || ''}</small></td>
+                            <td>${new Date(o.createdAt).toLocaleString()}</td>
+                            <td>${o.orderTiming}<br/><small>${o.fulfilmentType} ${o.tableNumber ? `(Table ${o.tableNumber})` : ''}</small></td>
+                            <td>${o.items.map(i => `${i.itemName} (x${i.quantity})`).join(', ')}</td>
+                            <td><strong>₹${o.totalAmount.toFixed(2)}</strong></td>
+                            <td>${o.paymentMethod}<br/><small class="badge" style="background:#e8f5e9; color:#2e7d32;">${o.paymentStatus}</small></td>
+                            <td><span class="status-badge status-${o.status}">${o.status}</span></td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function loadAdminMenu() {
+            try {
+                const res = await fetch(`${API_BASE}/menu/all-items`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    const items = await res.json();
+                    state.menuItems = items;
+                    const tbody = document.getElementById('adminMenuTableBody');
+                    tbody.innerHTML = items.map(item => `
+                        <tr>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:0.6rem;">
+                                    <img src="${item.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80'}" style="width:42px; height:42px; border-radius:6px; object-fit:cover;" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';" />
+                                    <div>
+                                        <strong>${item.name}</strong>
+                                        <div style="font-size:0.78rem; color:var(--text-muted); max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.description || ''}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${item.categoryName || 'General'}</td>
+                            <td>${item.isVegetarian ? '🟢 Veg' : '🔴 Non-Veg'}</td>
+                            <td><strong>₹${item.price.toFixed(2)}</strong></td>
+                            <td>${item.preparationTimeMinutes || 10}m</td>
+                            <td>
+                                <span class="badge" style="background:${item.isAvailable ? '#e8f5e9; color:#2e7d32' : '#ffebee; color:#c62828'};">
+                                    ${item.isAvailable ? 'Available' : 'Deactivated'}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+                                    <button class="btn-outline" style="padding:0.2rem 0.5rem; font-size:0.78rem;" onclick="toggleItemAvail(${item.id}, ${!item.isAvailable})">
+                                        ${item.isAvailable ? 'Deactivate' : 'Activate'}
+                                    </button>
+                                    <button class="btn-outline" style="padding:0.2rem 0.5rem; font-size:0.78rem;" onclick="openEditMenuItemModal(${item.id})">Edit</button>
+                                    <button class="btn-outline" style="padding:0.2rem 0.5rem; font-size:0.78rem; border-color:#d32f2f; color:#d32f2f;" onclick="deleteMenuItem(${item.id})">Del</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function toggleItemAvail(id, nextState) {
+            try {
+                const res = await fetch(`${API_BASE}/menu/items/${id}/availability`, {
+                    method: 'PATCH',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ available: nextState })
+                });
+                if (res.ok) {
+                    showToast(`Item availability updated to ${nextState ? 'Active' : 'Deactivated'}`, 'success');
+                    loadAdminMenu();
+                    loadMenuItems();
+                } else {
+                    showToast('Failed to update availability', 'error');
+                }
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+
+        // Category Management
+        async function openCategoryModal() {
+            renderCategoryManagerList();
+            document.getElementById('catId').value = '';
+            document.getElementById('catName').value = '';
+            document.getElementById('catDesc').value = '';
+            document.getElementById('catImg').value = '';
+            document.getElementById('catOrder').value = (state.categories.length + 1);
+            openModal('categoryModal');
+        }
+
+        function renderCategoryManagerList() {
+            const list = document.getElementById('categoryManagerList');
+            if (!list) return;
+            if (state.categories.length === 0) {
+                list.innerHTML = '<small style="color:var(--text-muted);">No categories available.</small>';
+                return;
+            }
+            list.innerHTML = state.categories.map(c => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0.2rem; border-bottom:1px solid var(--border-color);">
+                    <div>
+                        <strong>${c.name}</strong> <small style="color:var(--text-muted);">(Order: ${c.displayOrder || 0})</small>
+                    </div>
+                    <div style="display:flex; gap:0.4rem;">
+                        <button class="btn-outline" style="padding:0.15rem 0.45rem; font-size:0.75rem;" onclick="editCategory(${c.id})">Edit</button>
+                        <button class="btn-outline" style="padding:0.15rem 0.45rem; font-size:0.75rem; border-color:#d32f2f; color:#d32f2f;" onclick="deleteCategory(${c.id})">Del</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editCategory(id) {
+            const c = state.categories.find(cat => cat.id === id);
+            if (!c) return;
+            document.getElementById('catId').value = c.id;
+            document.getElementById('catName').value = c.name;
+            document.getElementById('catDesc').value = c.description || '';
+            document.getElementById('catImg').value = c.imageUrl || '';
+            document.getElementById('catOrder').value = c.displayOrder || 1;
+        }
+
+        async function saveCategory() {
+            const id = document.getElementById('catId').value;
+            const name = document.getElementById('catName').value.trim();
+            const desc = document.getElementById('catDesc').value.trim();
+            const img = document.getElementById('catImg').value.trim();
+            const order = parseInt(document.getElementById('catOrder').value) || 1;
+
+            if (!name) {
+                showToast('Category name is required', 'error');
+                return;
+            }
+
+            const payload = { name, description: desc, imageUrl: img, displayOrder: order };
+            const url = id ? `${API_BASE}/menu/categories/${id}` : `${API_BASE}/menu/categories`;
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    showToast(`Category '${name}' saved!`, 'success');
+                    await loadCategories();
+                    renderCategoryManagerList();
+                    populateCategorySelect();
+                    document.getElementById('catId').value = '';
+                    document.getElementById('catName').value = '';
+                    document.getElementById('catDesc').value = '';
+                    document.getElementById('catImg').value = '';
+                } else {
+                    const data = await res.json();
+                    showToast(data.message || 'Failed to save category', 'error');
+                }
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteCategory(id) {
+            if (!confirm('Are you sure you want to delete this category?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/menu/categories/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                if (res.ok) {
+                    showToast('Category deleted successfully', 'success');
+                    await loadCategories();
+                    renderCategoryManagerList();
+                    populateCategorySelect();
+                } else {
+                    showToast('Failed to delete category (items may be linked)', 'error');
+                }
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+
+        function openAddMenuItemModal() {
+            document.getElementById('menuItemId').value = '';
+            document.getElementById('menuModalTitle').innerText = 'Add New Menu Delight';
+            document.getElementById('menuName').value = '';
+            document.getElementById('menuPrice').value = '';
+            document.getElementById('menuDesc').value = '';
+            document.getElementById('menuImg').value = '';
+            document.getElementById('menuPrepTime').value = '8';
+            document.getElementById('menuSpicy').value = 'Mild';
+            document.getElementById('menuIsVeg').checked = true;
+            document.getElementById('menuIsAvail').checked = true;
+            populateCategorySelect();
+            openModal('menuItemModal');
+        }
+
+        function openEditMenuItemModal(id) {
+            const item = state.menuItems.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('menuItemId').value = item.id;
+            document.getElementById('menuModalTitle').innerText = 'Edit Menu Delight';
+            document.getElementById('menuName').value = item.name;
+            document.getElementById('menuPrice').value = item.price;
+            document.getElementById('menuDesc').value = item.description || '';
+            document.getElementById('menuImg').value = item.imageUrl || '';
+            document.getElementById('menuPrepTime').value = item.preparationTimeMinutes || 10;
+            document.getElementById('menuSpicy').value = item.spicyLevel || 'Mild';
+            document.getElementById('menuIsVeg').checked = item.isVegetarian;
+            document.getElementById('menuIsAvail').checked = item.isAvailable;
+            populateCategorySelect(item.categoryId);
+            openModal('menuItemModal');
+        }
+
+        function populateCategorySelect(selectedId = null) {
+            const select = document.getElementById('menuCategoryId');
+            select.innerHTML = state.categories.map(c => `
+                <option value="${c.id}" ${selectedId === c.id ? 'selected' : ''}>${c.name}</option>
+            `).join('');
+        }
+
+        async function saveMenuItem() {
+            const id = document.getElementById('menuItemId').value;
+            const name = document.getElementById('menuName').value.trim();
+            const categoryId = document.getElementById('menuCategoryId').value;
+            const price = parseFloat(document.getElementById('menuPrice').value);
+            const desc = document.getElementById('menuDesc').value.trim();
+            const img = document.getElementById('menuImg').value.trim();
+            const prep = parseInt(document.getElementById('menuPrepTime').value);
+            const spicy = document.getElementById('menuSpicy').value;
+            const isVeg = document.getElementById('menuIsVeg').checked;
+            const isAvail = document.getElementById('menuIsAvail').checked;
+
+            if (!name || isNaN(price) || !categoryId) {
+                showToast('Please provide valid name, category, and price', 'error');
+                return;
+            }
+
+            const payload = {
+                name, categoryId: parseInt(categoryId), price,
+                description: desc, imageUrl: img,
+                preparationTimeMinutes: prep, spicyLevel: spicy,
+                isVegetarian: isVeg, isAvailable: isAvail
+            };
+
+            const url = id ? `${API_BASE}/menu/items/${id}` : `${API_BASE}/menu/items`;
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    showToast(`Menu item ${id ? 'updated' : 'added'} successfully!`, 'success');
+                    closeModal('menuItemModal');
+                    loadMenuItems();
+                    loadAdminMenu();
+                } else {
+                    const data = await res.json();
+                    showToast(data.message || 'Operation failed', 'error');
+                }
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteMenuItem(id) {
+            if (!confirm('Are you sure you want to delete this menu item?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/menu/items/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                if (res.ok) {
+                    showToast('Item deleted successfully', 'success');
+                    loadMenuItems();
+                    loadAdminMenu();
+                } else {
+                    showToast('Failed to delete item', 'error');
+                }
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/users`, { headers: getAuthHeaders() });
+                if (res.ok) {
+                    const users = await res.json();
+                    const tbody = document.getElementById('usersTableBody');
+                    tbody.innerHTML = users.map(u => `
+                        <tr>
+                            <td>#${u.id}</td>
+                            <td>
+                                <strong>${u.name}</strong>
+                                ${u.mustChangePassword ? '<span class="badge" style="background:#fff3e0; color:#e65100; margin-left:0.3rem; font-size:0.7rem;">Needs Password Change</span>' : ''}
+                            </td>
+                            <td>${u.email || u.username || 'N/A'}</td>
+                            <td>${u.phone || 'N/A'}</td>
+                            <td><span class="badge" style="background:${u.role === 'ROLE_ADMIN' ? '#ede7f6; color:#512da8;' : (u.role === 'ROLE_STAFF' ? '#e8f5e9; color:#2e7d32;' : '#e3f2fd; color:#1565c0;')}">${u.role}</span></td>
+                            <td>
+                                <select style="padding:0.25rem 0.5rem; font-size:0.8rem; border-radius:4px; border:1px solid var(--border-color);" onchange="updateUserRole(${u.id}, this.value)">
+                                    <option value="ROLE_CUSTOMER" ${u.role === 'ROLE_CUSTOMER' ? 'selected' : ''}>CUSTOMER</option>
+                                    <option value="ROLE_STAFF" ${u.role === 'ROLE_STAFF' ? 'selected' : ''}>STAFF</option>
+                                    <option value="ROLE_ADMIN" ${u.role === 'ROLE_ADMIN' ? 'selected' : ''}>ADMIN</option>
+                                </select>
+                            </td>
+                            <td>${new Date(u.createdAt).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn-outline" style="padding:0.25rem 0.55rem; font-size:0.78rem;" onclick="openAdminResetPasswordModal(${u.id}, '${(u.name || '').replace(/'/g, "\\'")}', '${u.role}')">
+                                    🔑 Reset Password
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function openCreateUserModal() {
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserEmail').value = '';
+            document.getElementById('newUserPhone').value = '';
+            document.getElementById('newUserPassword').value = '';
+            document.getElementById('newUserRole').value = 'ROLE_STAFF';
+            openModal('createUserModal');
+        }
+
+        async function handleCreateUserSubmit() {
+            const name = document.getElementById('newUserName').value.trim();
+            const email = document.getElementById('newUserEmail').value.trim();
+            const phone = document.getElementById('newUserPhone').value.trim();
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
+
+            if (!name || !email || !password || !role) {
+                showToast('Please fill all required fields', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/admin/users`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ name, email, phone, password, role })
+                });
+                const data = await res.json();
+                document.getElementById('newUserPassword').value = '';
+                if (res.ok) {
+                    showToast(`User ${name} created successfully as ${role.replace('ROLE_', '')}!`, 'success');
+                    closeModal('createUserModal');
+                    loadUsers();
+                } else {
+                    showToast(data.message || 'Failed to create user', 'error');
+                }
+            } catch (e) {
+                document.getElementById('newUserPassword').value = '';
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function updateUserRole(userId, newRole) {
+            try {
+                const res = await fetch(`${API_BASE}/admin/users/${userId}/role`, {
+                    method: 'PATCH',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ role: newRole })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(`Role updated to ${newRole.replace('ROLE_', '')}`, 'success');
+                    loadUsers();
+                } else {
+                    showToast(data.message || 'Failed to update role', 'error');
+                }
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+
+        function openAdminResetPasswordModal(id, name, role) {
+            document.getElementById('resetUserId').value = id;
+            document.getElementById('resetUserName').innerText = name;
+            document.getElementById('resetUserRole').innerText = role.replace('ROLE_', '');
+            document.getElementById('resetNewPassword').value = '';
+            document.getElementById('resetConfirmPassword').value = '';
+            const alertEl = document.getElementById('resetSuccessAlert');
+            if (alertEl) alertEl.style.display = 'none';
+            const btn = document.getElementById('btnSubmitReset');
+            if (btn) btn.disabled = false;
+            openModal('adminResetPasswordModal');
+        }
+
+        async function handleAdminResetPasswordSubmit() {
+            const id = document.getElementById('resetUserId').value;
+            const newPassword = document.getElementById('resetNewPassword').value;
+            const confirmPassword = document.getElementById('resetConfirmPassword').value;
+
+            if (!newPassword || newPassword.length < 6) {
+                showToast('Temporary password must be at least 6 characters', 'error');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showToast('New password and confirm password do not match', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitReset');
+            try {
+                if (btn) btn.disabled = true;
+                const res = await fetch(`${API_BASE}/admin/users/${id}/reset-password`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ newPassword, confirmPassword })
+                });
+
+                document.getElementById('resetNewPassword').value = '';
+                document.getElementById('resetConfirmPassword').value = '';
+
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message || 'Password reset successfully', 'success');
+                    const alertEl = document.getElementById('resetSuccessAlert');
+                    if (alertEl) alertEl.style.display = 'block';
+                    loadUsers();
+                    setTimeout(() => {
+                        closeModal('adminResetPasswordModal');
+                        if (btn) btn.disabled = false;
+                    }, 1200);
+                } else {
+                    if (btn) btn.disabled = false;
+                    showToast(data.message || 'Failed to reset password', 'error');
+                }
+            } catch (e) {
+                document.getElementById('resetNewPassword').value = '';
+                document.getElementById('resetConfirmPassword').value = '';
+                if (btn) btn.disabled = false;
+                showToast('Error resetting password: ' + e.message, 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const authorized = await protectPage('ROLE_ADMIN');
+            if (authorized) {
+                loadAdminData();
+            }
+        });
+    </script>
+</body>
+</html>
